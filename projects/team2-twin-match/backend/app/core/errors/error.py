@@ -39,6 +39,10 @@ class NoMatchableAgentException(BadRequestException):
     detail = "매칭할 다른 Agent가 없습니다"
 
 
+class ConversationAlreadyStartedException(BadRequestException):
+    detail = "이미 시작되거나 진행 중인 대화입니다"
+
+
 class ConversationAlreadyCompletedException(BadRequestException):
     detail = "이미 완료된 대화입니다"
 

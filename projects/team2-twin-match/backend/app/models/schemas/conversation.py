@@ -40,3 +40,9 @@ class ConversationResultResp(BaseModel):
     conversation: ConversationResp
     messages: List[MessageResp]
     chemistry: Optional[ChemistryResp] = None
+
+
+class ConversationMessagesResp(BaseModel):
+    conversation: ConversationResp
+    messages: List[MessageResp]
+    latest_turn: int

@@ -318,7 +318,7 @@ DB에 이미 생성되어 있는 에이전트 풀(Pool)에서 즉시 한 명을 
 - `summary` (string): 상세 요약
 - `good_points` (array of strings): 잘 맞는 점 목록
 - `concerns` (array of strings): 우려되는 점 목록
-- `metrics` (object): 상세 지표 (티키타카, 공통 화제, 분위기 점수)
+- `metrics` (object): 상세 지표 (티키타카, 공통 화제, 분위기, 거리감 점수)
 - `final_comment` (string): 주선자 AI의 최종 코멘트
 
 **에러 케이스**:

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { type AvatarGradient, Btn, Card, Icon, Pill } from "@/components/ui";
-import { type ChemistryMetric, SAMPLE_RESULT } from "@/lib/mock";
+import { type ChemistryMetric, type ConversationLine, SAMPLE_RESULT } from "@/lib/mock";
 
 export type ChemistryResult = {
   score: number;
@@ -19,14 +19,19 @@ export const ResultView = ({
   onRestart,
   onConnect,
   user,
+  opponent,
   result = SAMPLE_RESULT,
+  conversation = [],
 }: {
   onRestart: () => void;
   onConnect: () => void;
-  user?: { name?: string };
+  user?: { name?: string | null };
+  opponent?: { name?: string | null };
   result?: ChemistryResult;
+  conversation?: ConversationLine[];
 }) => {
   const [displayScore, setDisplayScore] = useState(0);
+  const [showConversation, setShowConversation] = useState(false);
 
   useEffect(() => {
     let raf: number;
@@ -47,7 +52,8 @@ export const ResultView = ({
     char: (user?.name || "민준")[0],
     gradient: "coral" as AvatarGradient,
   };
-  const B = { name: "서연", char: "서", gradient: "sunset" as AvatarGradient };
+  const opponentName = opponent?.name || "상대 분신";
+  const B = { name: opponentName, char: opponentName[0], gradient: "sunset" as AvatarGradient };
 
   return (
     <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 48px 96px" }}>
@@ -358,6 +364,72 @@ export const ResultView = ({
                 &ldquo;{result.finalLine}&rdquo;
               </p>
             </Card>
+
+            {conversation.length > 0 && (
+              <Card pad={28}>
+                <button
+                  type="button"
+                  onClick={() => setShowConversation((open) => !open)}
+                  style={{
+                    width: "100%",
+                    border: "none",
+                    background: "transparent",
+                    padding: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    cursor: "pointer",
+                    color: "var(--ink)",
+                  }}
+                >
+                  <div>
+                    <SectionLabel>CONVERSATION</SectionLabel>
+                    <div style={{ marginTop: 6, fontSize: 16, fontWeight: 700 }}>
+                      AI끼리 나눈 대화 다시보기
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      display: "grid",
+                      placeItems: "center",
+                      border: "1px solid var(--line)",
+                      transform: showConversation ? "rotate(90deg)" : "rotate(0deg)",
+                      transition: "transform .2s",
+                    }}
+                  >
+                    {Icon.arrowRight(16)}
+                  </span>
+                </button>
+
+                {showConversation && (
+                  <div
+                    style={{
+                      marginTop: 18,
+                      maxHeight: 420,
+                      overflowY: "auto",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                      padding: "16px",
+                      background: "var(--cream)",
+                      borderRadius: 12,
+                      border: "1px solid var(--line)",
+                    }}
+                  >
+                    {conversation.map((line, index) => (
+                      <ResultConversationLine
+                        key={`${line.agent}-${index}`}
+                        line={line}
+                        name={line.agent === "A" ? A.name : B.name}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -449,6 +521,45 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
+
+const ResultConversationLine = ({
+  line,
+  name,
+}: {
+  line: ConversationLine;
+  name: string;
+}) => {
+  const me = line.agent === "A";
+  return (
+    <div
+      style={{
+        alignSelf: me ? "flex-end" : "flex-start",
+        maxWidth: "78%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: me ? "flex-end" : "flex-start",
+        gap: 4,
+      }}
+    >
+      <div style={{ fontSize: 11, color: "var(--ink-mute)", fontWeight: 600 }}>
+        {name}
+      </div>
+      <div
+        style={{
+          padding: "10px 13px",
+          borderRadius: me ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+          background: me ? "linear-gradient(135deg,#FF5864,#FD267A)" : "white",
+          color: me ? "white" : "var(--ink)",
+          border: me ? "none" : "1px solid var(--line)",
+          fontSize: 13.5,
+          lineHeight: 1.5,
+        }}
+      >
+        {line.text}
+      </div>
+    </div>
+  );
+};
 
 const FaceCircle = ({
   agent,

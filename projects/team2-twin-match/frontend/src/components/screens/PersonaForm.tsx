@@ -16,10 +16,12 @@ export const PersonaForm = ({
   onNext,
   onBack,
   submitting = false,
+  error,
 }: {
   onNext: (payload: PersonaPayload) => void;
   onBack: () => void;
   submitting?: boolean;
+  error?: string | null;
 }) => {
   const [text, setText] = useState("");
   const [name, setName] = useState("");
@@ -242,6 +244,22 @@ export const PersonaForm = ({
             </span>
           )}
         </div>
+        {error && (
+          <div
+            style={{
+              marginTop: 14,
+              padding: "12px 14px",
+              border: "1px solid rgba(253,38,122,.22)",
+              borderRadius: 10,
+              background: "rgba(253,38,122,.06)",
+              color: "var(--coral-deep)",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            {error}
+          </div>
+        )}
       </div>
 
       <PromptGuide />

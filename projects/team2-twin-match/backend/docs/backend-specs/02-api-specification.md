@@ -137,7 +137,8 @@ Content-Type: application/json
   "metrics": {
     "티키타카": 92,
     "공통 화제": 84,
-    "분위기": 81
+    "분위기": 81,
+    "거리감": 75
   },
   "final_comment": "충분히 만나볼 가치가 있는 조합입니다."
 }
@@ -150,7 +151,7 @@ Content-Type: application/json
 | summary | string | ✅ | 관계 요약 (1-2문장) |
 | good_points | array[string] | ✅ | 잘 맞는 점 목록 |
 | concerns | array[string] | ✅ | 우려되는 점 목록 |
-| metrics | object | ✅ | 상세 지표 (티키타카, 공통 화제, 분위기) |
+| metrics | object | ✅ | 상세 지표 (티키타카, 공통 화제, 분위기, 거리감) |
 | final_comment | string | ✅ | 최종 한마디 |
 
 ### 3.5 JobStatus

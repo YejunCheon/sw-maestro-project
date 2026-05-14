@@ -1,24 +1,27 @@
 name: Claude PR Review
 
 # 트리거:
-# 1) PR 이 열릴 때 (신규 오픈 또는 draft → ready)
+# 1) PR 이 ready_for_review 상태로 전환됐을 때 (draft → ready)
 # 2) PR 코멘트가 `/claude_review` 로 시작할 때 (수동 재요청 / 추가 지시)
 on:
-  pull_request:
-    types: [opened, ready_for_review]
   issue_comment:
     types: [created]
 
 jobs:
   review:
-    # PR 이벤트는 무조건 통과. 코멘트 이벤트는 PR 에 달린 코멘트이면서
-    # 본문이 `/claude_review` 로 시작할 때만.
+    # PR 에 달린 코멘트이면서 본문이 `/claude_review` 로 시작할 때만.
+    # 보안: OWNER / MEMBER / COLLABORATOR 만 트리거 가능 (write 권한 남용 방지)
     if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request != null &&
-       startsWith(github.event.comment.body, '/claude_review'))
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      startsWith(github.event.comment.body, '/claude_review') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write
@@ -43,7 +46,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--dangerously-skip-permissions"
+          claude_args: >-
+            --model claude-opus-4-7
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
           show_full_output: "true"
           prompt: |
             REPO: ${{ github.repository }}
@@ -78,13 +83,10 @@ jobs:
             - 카테고리별로 그룹핑된 코멘트 (필요한 경우만).
             - blocking 이슈와 nit 을 구분해서 표기.
 
-            **중요: 리뷰 작성이 끝나면 반드시 아래 명령어로 PR에 직접 코멘트를 달아주세요.**
-            리뷰 내용을 REVIEW_BODY 변수에 담아 gh CLI로 게시하세요:
-            ```
-            gh pr comment ${{ github.event.pull_request.number || github.event.issue.number }} \
-              --repo ${{ github.repository }} \
-              --body "$(cat <<'REVIEW_EOF'
-            [리뷰 내용]
-            REVIEW_EOF
-            )"
-            ```
+      - name: Post review as PR comment
+        if: always() && steps.claude_review.outputs.result != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESULT: ${{ steps.claude_review.outputs.result }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "$RESULT"

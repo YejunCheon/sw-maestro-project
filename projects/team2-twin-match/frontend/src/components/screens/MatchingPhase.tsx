@@ -8,9 +8,11 @@ import { SAMPLE_OPPONENT } from "@/lib/mock";
 export const MatchingPhase = ({
   onMatched,
   user,
+  opponent: matchedOpponent,
 }: {
   onMatched: () => void;
-  user?: { name?: string; age?: number };
+  user?: { name?: string | null; age?: number | null; tags?: string[] };
+  opponent?: { name?: string | null; age?: number | null; tags?: string[] };
 }) => {
   const [phase, setPhase] = useState(0);
 
@@ -25,7 +27,11 @@ export const MatchingPhase = ({
     };
   }, [onMatched]);
 
-  const opponent = SAMPLE_OPPONENT;
+  const opponent = {
+    ...SAMPLE_OPPONENT,
+    ...matchedOpponent,
+    tags: matchedOpponent?.tags?.length ? matchedOpponent.tags : SAMPLE_OPPONENT.tags,
+  };
 
   return (
     <div
@@ -104,7 +110,7 @@ export const MatchingPhase = ({
             phase={phase}
             name={user?.name || "민준"}
             age={user?.age || 28}
-            tags={["#INTP", "#필름", "#등산"]}
+            tags={user?.tags?.length ? user.tags : ["#INTP", "#필름", "#등산"]}
             gradient="coral"
             label="YOU"
             blurred={false}
@@ -124,8 +130,8 @@ export const MatchingPhase = ({
           <MatchCard
             side="right"
             phase={phase}
-            name={phase >= 1 ? opponent.name : "?"}
-            age={phase >= 1 ? opponent.age : "??"}
+            name={phase >= 1 ? opponent.name || "상대" : "?"}
+            age={phase >= 1 ? opponent.age || "??" : "??"}
             tags={phase >= 1 ? opponent.tags : ["#???", "#???", "#???"]}
             gradient="sunset"
             label="MATCH"
@@ -277,9 +283,9 @@ const MatchCard = ({
             transition: "filter .6s",
           }}
         >
-          {tags.map((t) => (
+          {tags.map((t, index) => (
             <span
-              key={t}
+              key={`${side}-tag-${index}-${t}`}
               style={{
                 fontSize: 12,
                 color: "var(--coral-deep)",

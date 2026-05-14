@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.db.session import Base
 from app.main import create_app
+from app.repositories.agent_repository import AgentRepository
 
 # Import all models so they are registered on Base.metadata before create_all.
 from app.models.db import agent, chemistry, conversation, job, message  # noqa: F401
@@ -78,3 +79,17 @@ async def client_with_db(app, db_engine) -> AsyncClient:
     ) as client:
         yield client
     app.dependency_overrides.clear()
+
+
+async def make_agent(db_session: AsyncSession, name: str) -> str:
+    repo = AgentRepository(db_session)
+    dto = await repo.create_clone(
+        name=name,
+        age=25,
+        gender="M",
+        job="개발자",
+        tags=[],
+        persona_text=f"{name} 페르소나 텍스트입니다. 충분히 길게 작성합니다.",
+        system_prompt="sys",
+    )
+    return dto.id

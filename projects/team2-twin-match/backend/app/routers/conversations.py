@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from app.models.schemas.chemistry import ChemistryResp
 from app.models.schemas.common import ErrorResponse
 from app.models.schemas.conversation import (
+    ConversationMessagesResp,
     ConversationResp,
     ConversationResultResp,
     MatchReq,
@@ -49,6 +50,22 @@ async def start_conversation(
     job_id, message = await service.start_conversation(conversation_id)
     background_tasks.add_task(service.run_conversation_loop, conversation_id, job_id)
     return StartConversationResp(job_id=job_id, message=message)
+
+
+@router.get(
+    "/{conversation_id}/messages",
+    response_model=ConversationMessagesResp,
+    responses={404: {"model": ErrorResponse}},
+)
+async def get_messages(
+    conversation_id: str,
+    after_turn: int = 0,
+    service: ConversationService = Depends(get_conversation_service),
+) -> ConversationMessagesResp:
+    """GET /api/conversations/{id}/messages — 대화 중 생성된 메시지 변화분."""
+    return await service.get_conversation_messages(
+        conversation_id, after_turn=after_turn
+    )
 
 
 @router.get(

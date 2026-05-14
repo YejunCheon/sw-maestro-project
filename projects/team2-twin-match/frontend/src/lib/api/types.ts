@@ -122,6 +122,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/conversations/{conversation_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Messages
+         * @description GET /api/conversations/{id}/messages — 대화 중 생성된 메시지 변화분.
+         */
+        get: operations["get_messages_api_conversations__conversation_id__messages_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/conversations/{conversation_id}/result": {
         parameters: {
             query?: never;
@@ -238,6 +258,14 @@ export interface components {
             };
             /** Final Comment */
             final_comment: string;
+        };
+        /** ConversationMessagesResp */
+        ConversationMessagesResp: {
+            conversation: components["schemas"]["ConversationResp"];
+            /** Messages */
+            messages: components["schemas"]["MessageResp"][];
+            /** Latest Turn */
+            latest_turn: number;
         };
         /** ConversationResp */
         ConversationResp: {
@@ -464,6 +492,15 @@ export interface operations {
                     "application/json": components["schemas"]["AgentResp"];
                 };
             };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Not Found */
             404: {
                 headers: {
@@ -562,6 +599,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_messages_api_conversations__conversation_id__messages_get: {
+        parameters: {
+            query?: {
+                after_turn?: number;
+            };
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationMessagesResp"];
                 };
             };
             /** @description Not Found */

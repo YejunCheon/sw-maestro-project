@@ -328,9 +328,9 @@ const PersonaCard = ({
       {line}
     </div>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-      {tags.map((t) => (
+      {tags.map((t, index) => (
         <span
-          key={t}
+          key={`tag-${index}-${t}`}
           style={{
             fontSize: 11,
             color: "var(--coral-deep)",

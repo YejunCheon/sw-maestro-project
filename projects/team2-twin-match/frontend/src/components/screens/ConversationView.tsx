@@ -10,34 +10,46 @@ type AgentMeta = { name: string; gradient: AvatarGradient; char: string };
 export const ConversationView = ({
   onComplete,
   user,
+  opponent,
   conversation = SAMPLE_CONVERSATION,
   autoPlay = true,
   speed = 1,
+  generating = false,
+  expectedTotal,
 }: {
   onComplete: () => void;
-  user?: { name?: string };
+  user?: { name?: string | null };
+  opponent?: { name?: string | null };
   conversation?: ConversationLine[];
   autoPlay?: boolean;
   speed?: number;
+  generating?: boolean;
+  expectedTotal?: number;
 }) => {
-  const TOTAL = conversation.length;
+  const TOTAL = expectedTotal ?? conversation.length;
 
   const [shown, setShown] = useState(0);
-  const [typing, setTyping] = useState<"A" | "B" | null>(null);
   const [paused, setPaused] = useState(!autoPlay);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const visibleCount = Math.min(shown, conversation.length);
+  const typing =
+    !paused && shown < conversation.length
+      ? conversation[shown].agent
+      : !paused && generating && shown < TOTAL
+        ? shown % 2 === 0
+          ? "A"
+          : "B"
+        : null;
 
   useEffect(() => {
-    if (paused || shown >= TOTAL) return;
+    if (paused || shown >= conversation.length) return;
     const next = conversation[shown];
-    const typingDuration = Math.min(900 + next.text.length * 35, 2200) / speed;
-    setTyping(next.agent);
+    const typingDuration = Math.min(1200 + next.text.length * 45, 3200) / speed;
     const t = setTimeout(() => {
-      setTyping(null);
       setShown((s) => s + 1);
     }, typingDuration);
     return () => clearTimeout(t);
-  }, [shown, paused, speed, conversation, TOTAL]);
+  }, [shown, paused, speed, conversation]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -46,21 +58,22 @@ export const ConversationView = ({
   }, [shown, typing]);
 
   useEffect(() => {
-    if (shown >= TOTAL) {
+    if (!generating && TOTAL > 0 && shown >= TOTAL) {
       const t = setTimeout(() => onComplete(), 1500);
       return () => clearTimeout(t);
     }
-  }, [shown, TOTAL, onComplete]);
+  }, [shown, TOTAL, onComplete, generating]);
 
   const A: AgentMeta = {
     name: user?.name || "민준",
     gradient: "coral",
     char: (user?.name || "민준")[0],
   };
-  const B: AgentMeta = { name: "서연", gradient: "sunset", char: "서" };
+  const opponentName = opponent?.name || "상대 분신";
+  const B: AgentMeta = { name: opponentName, gradient: "sunset", char: opponentName[0] };
 
-  const progress = Math.round((shown / TOTAL) * 100);
-  const isComplete = shown >= TOTAL;
+  const progress = TOTAL ? Math.round((visibleCount / TOTAL) * 100) : 0;
+  const isComplete = !generating && TOTAL > 0 && shown >= TOTAL;
 
   return (
     <div
@@ -133,7 +146,7 @@ export const ConversationView = ({
                   {B.name}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-                  AI 페르소나 시뮬레이션 · {shown}/{TOTAL} 턴
+                  AI 페르소나 시뮬레이션 · {visibleCount}/{TOTAL} 턴
                 </div>
               </div>
             </div>
@@ -192,13 +205,13 @@ export const ConversationView = ({
           >
             <SystemMessage>두 분신이 처음 인사를 나눕니다.</SystemMessage>
 
-            {conversation.slice(0, shown).map((m, i) => (
+            {conversation.slice(0, visibleCount).map((m, i) => (
               <ChatMsg
                 key={i}
                 msg={m}
                 me={m.agent === "A"}
                 agent={m.agent === "A" ? A : B}
-                showAvatar={shouldShowAvatar(conversation, i, shown)}
+                showAvatar={shouldShowAvatar(conversation, i, visibleCount)}
               />
             ))}
 
@@ -274,11 +287,10 @@ export const ConversationView = ({
             variant="ghost"
             size="md"
             onClick={() => {
-              setShown(TOTAL);
-              setTyping(null);
+              setShown(generating ? conversation.length : TOTAL);
             }}
           >
-            끝까지 빠르게 보기
+            {generating ? "현재까지 빠르게 보기" : "끝까지 빠르게 보기"}
           </Btn>
         )}
       </div>

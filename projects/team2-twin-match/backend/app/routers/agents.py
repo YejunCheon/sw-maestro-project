@@ -44,7 +44,10 @@ async def list_agents(
 @router.get(
     "/{agent_id}",
     response_model=AgentResp,
-    responses={404: {"model": ErrorResponse}},
+    responses={
+        400: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
 )
 async def read_agent(
     agent_id: str,
